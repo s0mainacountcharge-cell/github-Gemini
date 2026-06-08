@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini</title>
+    <title>Gemini (Markdown版)</title>
+    <!-- ✨【追加】マークダウンをHTMLに変換してくれる魔法のライブラリ -->
+    <script src="https://jsdelivr.net"></script>
     <style>
-                /* 全体の背景をいただいた画像の「真っ白」に変更 */
+        /* 全体の背景をいただいた画像の「真っ白」に設定 */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #FFFFFF; /* ✨ 送っていただいた純白の色です */
-            color: #1f1f1f; /* 文字色は見やすい深いグレー */
+            background: #FFFFFF; 
+            color: #1f1f1f; 
             margin: 0; 
             padding: 0; 
             display: flex; 
@@ -23,7 +25,7 @@
             font-size: 20px;
             font-weight: 500;
             color: #1f1f1f;
-            border-bottom: 1px solid #f0f0f0; /* 薄い境界線 */
+            border-bottom: 1px solid #f0f0f0; 
         }
 
         /* チャット表示エリア */
@@ -49,13 +51,14 @@
             font-size: 15px;
         }
 
-        /* ユーザーの発言（右側・白背景に映える薄いグレーの吹き出し） */
+        /* ユーザーの発言（右側・薄いブルーグレーの吹き出し） */
         .user { 
-            background: #f0f4f9; /* Googleっぽい爽やかな薄いブルーグレー */
+            background: #f0f4f9; 
             color: #1f1f1f;
             align-self: flex-end; 
             margin-left: auto; 
             border-bottom-right-radius: 4px;
+            white-space: pre-wrap; /* ユーザー側の改行を維持 */
         }
 
         /* Geminiの発言（左側・枠なし） */
@@ -75,6 +78,14 @@
             font-size: 18px;
         }
 
+        /* ✨【追加】マークダウン変換後の文字デザインを本物っぽく整える設定 */
+        .ai p { margin: 0 0 10px 0; }
+        .ai p:last-child { margin-bottom: 0; }
+        .ai ul, .ai ol { margin: 5px 0; padding-left: 20px; }
+        .ai li { margin: 5px 0; }
+        .ai strong { color: #000; font-weight: 600; }
+        .ai code { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+
         /* 入力エリアのコンテナ */
         .input-container {
             max-width: 800px;
@@ -84,17 +95,17 @@
             box-sizing: border-box;
         }
 
-        /* 本物風の丸い入力ボックス（背景が白なので、少しグレーにして目立たせます） */
+        /* 丸い入力ボックス */
         #input-area { 
             display: flex; 
             align-items: center;
-            background: #f0f2f5; /* ソフトな明るいグレー */
+            background: #f0f2f5; 
             border-radius: 28px;
             padding: 6px 16px;
             border: 1px solid transparent;
         }
         #input-area:focus-within {
-            background: #eaf0f6; /* クリックした時に少し青みがかった色に */
+            background: #eaf0f6; 
         }
 
         /* 入力欄本体 */
@@ -127,14 +138,12 @@
         button:hover {
             background: #e1e4e8;
         }
-
     </style>
 </head>
 <body>
 
     <header>✨ Gemini</header>
     <div id="chat-box">
-        <!-- 最初のアナウンス -->
         <div class="msg ai"><b>Gemini:</b> 今日はどのような用件でしょうか？</div>
     </div>
     
@@ -145,7 +154,7 @@
         </div>
     </div>
 
-                <script>
+    <script>
         // 🔒 サイトを開いた時にポップアップでキーを入力させます
         let API_KEY = window.sessionStorage.getItem('gemini_key');
         
@@ -156,7 +165,6 @@
             }
         }
         
-        // ✨ 一番安定して繋がるドメインのフルURLです
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 
         let chatHistory = [];
@@ -200,12 +208,12 @@
 
                 const data = await response.json();
                 
-                // データ構造の存在チェックを行ってから文字を安全に抜き出します
-                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
                     const reply = data.candidates[0].content.parts[0].text;
 
-                    // 3. 画面書き換え
-                    document.getElementById(aiMsgId).innerHTML = reply.replace(/\n/g, '<br>');
+                    // ✨【修正】元の文字を置き換えるのではなく、ライブラリを使ってマークダウン形式のHTMLに変換して埋め込む
+                    // ※marked.parse() を使うことで、**太字** が <strong>太字</strong> に自動変換されます
+                    document.getElementById(aiMsgId).innerHTML = marked.parse(reply);
 
                     // AIの返答を履歴に記憶させる
                     chatHistory.push({
@@ -224,3 +232,5 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
+</body>
+</html>
