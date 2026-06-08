@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini (Markdown版)</title>
-    <!-- ✨【追加】マークダウンをHTMLに変換してくれる魔法のライブラリ -->
-    <!-- 外部のURLではなく、自分のフォルダ内のファイルを直接読み込む -->
     <style>
-        /* 全体の背景をいただいた画像の「真っ白」に設定 */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: #FFFFFF; 
@@ -18,8 +15,6 @@
             flex-direction: column; 
             height: 100vh; 
         }
-        
-        /* ヘッダー */
         header {
             padding: 15px 20px;
             font-size: 20px;
@@ -27,8 +22,6 @@
             color: #1f1f1f;
             border-bottom: 1px solid #f0f0f0; 
         }
-
-        /* チャット表示エリア */
         #chat-box { 
             flex: 1; 
             max-width: 800px;
@@ -40,8 +33,6 @@
             display: flex;
             flex-direction: column;
         }
-
-        /* メッセージの枠 */
         .msg { 
             margin: 15px 0; 
             padding: 12px 18px; 
@@ -50,26 +41,20 @@
             line-height: 1.6;
             font-size: 15px;
         }
-
-        /* ユーザーの発言（右側・薄いブルーグレーの吹き出し） */
         .user { 
             background: #f0f4f9; 
             color: #1f1f1f;
             align-self: flex-end; 
             margin-left: auto; 
             border-bottom-right-radius: 4px;
-            white-space: pre-wrap; /* ユーザー側の改行を維持 */
+            white-space: pre-wrap; 
         }
-
-        /* Geminiの発言（左側・枠なし） */
         .ai { 
             background: transparent; 
             align-self: flex-start; 
             padding-left: 40px;
             position: relative;
         }
-
-        /* Geminiのキラキラアイコン */
         .ai::before {
             content: "✨";
             position: absolute;
@@ -77,16 +62,12 @@
             top: 12px;
             font-size: 18px;
         }
-
-        /* ✨【追加】マークダウン変換後の文字デザインを本物っぽく整える設定 */
         .ai p { margin: 0 0 10px 0; }
         .ai p:last-child { margin-bottom: 0; }
         .ai ul, .ai ol { margin: 5px 0; padding-left: 20px; }
         .ai li { margin: 5px 0; }
         .ai strong { color: #000; font-weight: 600; }
         .ai code { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-
-        /* 入力エリアのコンテナ */
         .input-container {
             max-width: 800px;
             width: 100%;
@@ -94,8 +75,6 @@
             padding: 0 20px 25px 20px;
             box-sizing: border-box;
         }
-
-        /* 丸い入力ボックス */
         #input-area { 
             display: flex; 
             align-items: center;
@@ -107,8 +86,6 @@
         #input-area:focus-within {
             background: #eaf0f6; 
         }
-
-        /* 入力欄本体 */
         input { 
             flex: 1; 
             background: transparent;
@@ -121,8 +98,6 @@
         input::placeholder {
             color: #757575;
         }
-
-        /* 送信ボタン（Googleブルー） */
         button { 
             background: transparent;
             border: none;
@@ -139,60 +114,45 @@
             background: #e1e4e8;
         }
     </style>
+    <!-- 🌟 ブラウザのバグを防ぐため、一番安全な「</style>のすぐ下」に配置しました -->
     <script src="marked.min.js"></script>
 </head>
 <body>
-
     <header>✨ Gemini</header>
     <div id="chat-box">
         <div class="msg ai"><b>Gemini:</b> 今日はどのような用件でしょうか？</div>
     </div>
-    
     <div class="input-container">
         <div id="input-area">
             <input type="text" id="user-input" placeholder="ここにプロンプトを入力してください" onkeypress="if(event.key==='Enter') sendToGemini()">
             <button onclick="sendToGemini()">➤</button>
         </div>
     </div>
-
     <script>
-        // 🔒 サイトを開いた時にポップアップでキーを入力させます
         let API_KEY = window.sessionStorage.getItem('gemini_key');
-        
         if (!API_KEY) {
             API_KEY = prompt("Gemini APIキーを入力してください：");
             if (API_KEY) {
                 window.sessionStorage.setItem('gemini_key', API_KEY);
             }
         }
-        
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
-
+        const API_URL = "https://googleapis.com" + API_KEY;
         let chatHistory = [];
-
         async function sendToGemini() {
             const inputField = document.getElementById('user-input');
             const chatBox = document.getElementById('chat-box');
             const promptValue = inputField.value.trim();
-            
             if (!promptValue) return;
-
-            // 1. ユーザーのメッセージを表示
             chatBox.innerHTML += '<div class="msg user">' + promptValue + '</div>';
             inputField.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
-
-            // AIの返答待ち表示
             const aiMsgId = 'ai-' + Date.now();
             chatBox.innerHTML += '<div class="msg ai" id="' + aiMsgId + '">考え中...</div>';
             chatBox.scrollTop = chatBox.scrollHeight;
-
             chatHistory.push({
                 role: "user",
                 parts: [{ text: promptValue }]
             });
-
-            // 2. API送信
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -201,22 +161,15 @@
                         contents: chatHistory
                     })
                 });
-
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error("APIエラー: " + response.status + " - " + errorText);
                 }
-
                 const data = await response.json();
-                
                 if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
                     const reply = data.candidates[0].content.parts[0].text;
-
-                    // ✨【修正】元の文字を置き換えるのではなく、ライブラリを使ってマークダウン形式のHTMLに変換して埋め込む
-                    // ※marked.parse() を使うことで、**太字** が <strong>太字</strong> に自動変換されます
+                    // 🌟 読み込んだ marked.min.js を使ってマークダウン変換
                     document.getElementById(aiMsgId).innerHTML = marked.parse(reply);
-
-                    // AIの返答を履歴に記憶させる
                     chatHistory.push({
                         role: "model",
                         parts: [{ text: reply }]
@@ -224,7 +177,6 @@
                 } else {
                     throw new Error("Googleから想定外のデータが返ってきました。");
                 }
-
             } catch (error) {
                 console.error("デバッグ用詳細:", error);
                 document.getElementById(aiMsgId).innerHTML = '<span style="color: #ff4d4d;">エラー: ' + error.message + '</span>';
