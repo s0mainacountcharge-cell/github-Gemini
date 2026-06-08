@@ -145,7 +145,7 @@
         </div>
     </div>
 
-            <script>
+                <script>
         // 🔒 サイトを開いた時にポップアップでキーを入力させます
         let API_KEY = window.sessionStorage.getItem('gemini_key');
         
@@ -156,61 +156,56 @@
             }
         }
         
-        // ✨【変更点1】2026年現在の最新の公式エンドポイントURLに固定しました
-        const const API_URL = `https://aiplatform.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+        // ✨ 一番安定して繋がるドメインのフルURLです
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 
         let chatHistory = [];
 
         async function sendToGemini() {
             const inputField = document.getElementById('user-input');
             const chatBox = document.getElementById('chat-box');
-            const prompt = inputField.value.trim();
+            const promptValue = inputField.value.trim();
             
-            if (!prompt) return;
+            if (!promptValue) return;
 
             // 1. ユーザーのメッセージを表示
-            chatBox.innerHTML += `<div class="msg user">${prompt}</div>`;
+            chatBox.innerHTML += '<div class="msg user">' + promptValue + '</div>';
             inputField.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
             // AIの返答待ち表示
             const aiMsgId = 'ai-' + Date.now();
-            chatBox.innerHTML += `<div class="msg ai" id="${aiMsgId}">考え中...</div>`;
+            chatBox.innerHTML += '<div class="msg ai" id="' + aiMsgId + '">考え中...</div>';
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // ✨【変更点2】Geminiの公式仕様（roleとpartsの形）に完全に合わせました
             chatHistory.push({
                 role: "user",
-                parts: [{ text: prompt }]
+                parts: [{ text: promptValue }]
             });
 
             // 2. API送信
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    // ✨【変更点3】ブラウザのCORS制限（安全装置）をすり抜けるためのヘッダーに修正
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: chatHistory
                     })
                 });
 
-                // 通信自体が失敗している場合はエラーを投げる
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`APIエラー: ${response.status} - ${errorText}`);
+                    throw new Error("APIエラー: " + response.status + " - " + errorText);
                 }
 
                 const data = await response.json();
                 
-                // ✨【変更点4】一番エラーが起きやすかった「返事の文字の抜き出し方」を完全防水仕様に修正
+                // データ構造の存在チェックを行ってから文字を安全に抜き出します
                 if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
                     const reply = data.candidates[0].content.parts[0].text;
 
                     // 3. 画面書き換え
-                    document.getElementById(aiMsgId).innerHTML = `${reply.replace(/\n/g, '<br>')}`;
+                    document.getElementById(aiMsgId).innerHTML = reply.replace(/\n/g, '<br>');
 
                     // AIの返答を履歴に記憶させる
                     chatHistory.push({
@@ -218,13 +213,12 @@
                         parts: [{ text: reply }]
                     });
                 } else {
-                    throw new Error("Googleからの返却データが想定外の形です。");
+                    throw new Error("Googleから想定外のデータが返ってきました。");
                 }
 
             } catch (error) {
-                // 原因を特定できるように画面とコンソールに詳しくエラーを吐き出します
-                console.error("デバッグ用エラー詳細:", error);
-                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ff4d4d;">エラー原因: ${error.message}<br>APIキーが正しいか、またはブラウザのF12キーを押して「コンソール（Console）」タブの赤文字を確認してください。</span>`;
+                console.error("デバッグ用詳細:", error);
+                document.getElementById(aiMsgId).innerHTML = '<span style="color: #ff4d4d;">エラー: ' + error.message + '</span>';
                 chatHistory.pop();
             }
             chatBox.scrollTop = chatBox.scrollHeight;
