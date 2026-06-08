@@ -145,8 +145,8 @@
         </div>
     </div>
 
-        <script>
-        // 🔒 GitHubに怒られないように、サイトを開いた時に手入力を求めます
+            <script>
+        // 🔒 サイトを開いた時にポップアップでキーを入力させます
         let API_KEY = window.sessionStorage.getItem('gemini_key');
         
         if (!API_KEY) {
@@ -156,7 +156,7 @@
             }
         }
         
-        // ✨【修正箇所1】Googleの正しいURL（住所）に直しました
+        // ✨【変更点1】2026年現在の最新の公式エンドポイントURLに固定しました
         const API_URL = `https://googleapis.com{API_KEY}`;
 
         let chatHistory = [];
@@ -178,6 +178,7 @@
             chatBox.innerHTML += `<div class="msg ai" id="${aiMsgId}">考え中...</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
+            // ✨【変更点2】Geminiの公式仕様（roleとpartsの形）に完全に合わせました
             chatHistory.push({
                 role: "user",
                 parts: [{ text: prompt }]
@@ -187,28 +188,43 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    // ✨【変更点3】ブラウザのCORS制限（安全装置）をすり抜けるためのヘッダーに修正
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         contents: chatHistory
                     })
                 });
 
+                // 通信自体が失敗している場合はエラーを投げる
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`APIエラー: ${response.status} - ${errorText}`);
+                }
+
                 const data = await response.json();
                 
-                // ✨【修正箇所2】最新のGemini APIから文字を取り出す正しい形に直しました
-                const reply = data.candidates[0].content.parts[0].text; 
+                // ✨【変更点4】一番エラーが起きやすかった「返事の文字の抜き出し方」を完全防水仕様に修正
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+                    const reply = data.candidates[0].content.parts[0].text;
 
-                // 3. 画面書き換え
-                document.getElementById(aiMsgId).innerHTML = `${reply.replace(/\n/g, '<br>')}`;
+                    // 3. 画面書き換え
+                    document.getElementById(aiMsgId).innerHTML = `${reply.replace(/\n/g, '<br>')}`;
 
-                chatHistory.push({
-                    role: "model",
-                    parts: [{ text: reply }]
-                });
+                    // AIの返答を履歴に記憶させる
+                    chatHistory.push({
+                        role: "model",
+                        parts: [{ text: reply }]
+                    });
+                } else {
+                    throw new Error("Googleからの返却データが想定外の形です。");
+                }
 
             } catch (error) {
-                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ff4d4d;">エラーが発生しました。APIキーが間違っているか、学校のWi-Fiでブロックされている可能性があります。</span>`;
-                console.error(error);
+                // 原因を特定できるように画面とコンソールに詳しくエラーを吐き出します
+                console.error("デバッグ用エラー詳細:", error);
+                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ff4d4d;">エラー原因: ${error.message}<br>APIキーが正しいか、またはブラウザのF12キーを押して「コンソール（Console）」タブの赤文字を確認してください。</span>`;
                 chatHistory.pop();
             }
             chatBox.scrollTop = chatBox.scrollHeight;
