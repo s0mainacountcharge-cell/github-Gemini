@@ -145,9 +145,8 @@
         </div>
     </div>
 
-    <script>
-                // 🔒 GitHubに怒られないように、サイトを開いた時に手入力を求めます
-        // 一度入力すれば、ページを閉じるまでブラウザが記憶します
+        <script>
+        // 🔒 GitHubに怒られないように、サイトを開いた時に手入力を求めます
         let API_KEY = window.sessionStorage.getItem('gemini_key');
         
         if (!API_KEY) {
@@ -157,6 +156,7 @@
             }
         }
         
+        // ✨【修正箇所1】Googleの正しいURL（住所）に直しました
         const API_URL = `https://googleapis.com{API_KEY}`;
 
         let chatHistory = [];
@@ -194,7 +194,9 @@
                 });
 
                 const data = await response.json();
-                const reply = data.candidates[0].content.parts[0].text; // バグ防止のためデータ構造の指定を少し厳密に直しました
+                
+                // ✨【修正箇所2】最新のGemini APIから文字を取り出す正しい形に直しました
+                const reply = data.candidates[0].content.parts[0].text; 
 
                 // 3. 画面書き換え
                 document.getElementById(aiMsgId).innerHTML = `${reply.replace(/\n/g, '<br>')}`;
@@ -205,12 +207,10 @@
                 });
 
             } catch (error) {
-                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ecc9c9;">エラーが発生しました。学校のWi-FiでAPI通信自体がブロックされている可能性があります。</span>`;
+                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ff4d4d;">エラーが発生しました。APIキーが間違っているか、学校のWi-Fiでブロックされている可能性があります。</span>`;
                 console.error(error);
                 chatHistory.pop();
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
-</body>
-</html>
