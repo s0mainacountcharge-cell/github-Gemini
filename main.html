@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>履歴が残るマイGeminiチャット</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; height: 90vh; }
+        #chat-box { flex: 1; border: 1px solid #ccc; background: white; padding: 15px; overflow-y: scroll; border-radius: 8px; margin-bottom: 10px; }
+        .msg { margin: 10px 0; padding: 10px; border-radius: 5px; max-width: 80%; }
+        .user { background: #e3f2fd; align-self: flex-end; margin-left: auto; text-align: right; }
+        .ai { background: #f1f8e9; align-self: flex-start; }
+        #input-area { display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>🤖 履歴が残るマイGeminiチャット</h2>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="メッセージを入力してください..." onkeypress="if(event.key==='Enter') sendToGemini()">
+        <button onclick="sendToGemini()">送信</button>
+    </div>
+
+    <script>
+        // ⚠️ ここに取得したGeminiのAPIキーを貼り付けてください
+        const API_KEY = 'ここにあなたのAPIキーを貼り付ける';
+        const API_URL = `https://googleapis.com{API_KEY}`;
+
+        // 🌟 ここに過去の会話履歴をどんどん溜めていきます
+        let chatHistory = [];
+
+        async function sendToGemini() {
+            const inputField = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            const prompt = inputField.value.trim();
+            
+            if (!prompt) return;
+
+            // 1. ユーザーのメッセージを画面に表示
+            chatBox.innerHTML += `<div class="msg user"><b>あなた:</b> ${prompt}</div>`;
+            inputField.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // AIの返答待ち表示
+            const aiMsgId = 'ai-' + Date.now();
+            chatBox.innerHTML += `<div class="msg ai" id="${aiMsgId}"><b>Gemini:</b> 考え中...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 🌟 履歴リストに今回のユーザーの発言を追加
+            chatHistory.push({
+                role: "user",
+                parts: [{ text: prompt }]
+            });
+
+            // 2. Googleのサーバー（API）へ「履歴丸ごと」送信
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: chatHistory // 🌟 単発の質問ではなく、今までの履歴を送る
+                    })
+                });
+
+                const data = await response.json();
+                const reply = data.candidates[0].content.parts[0].text;
+
+                // 3. Googleから返ってきた答えを画面に書く
+                document.getElementById(aiMsgId).innerHTML = `<b>Gemini:</b> ${reply.replace(/\n/g, '<br>')}`;
+
+                // 🌟 履歴リストにAIの返答も追加して記憶させる
+                chatHistory.push({
+                    role: "model",
+                    parts: [{ text: reply }]
+                });
+
+            } catch (error) {
+                document.getElementById(aiMsgId).innerHTML = `<b>Gemini:</b> エラーが発生しました。`;
+                console.error(error);
+                // エラーが起きた場合は、直前のユーザーの発言を履歴から消去して不整合を防ぐ
+                chatHistory.pop();
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
