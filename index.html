@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini</title>
     <style>
-        /* 全体の背景を本物っぽいダークモード風（ディープネイビー）に */
+                /* 全体の背景をいただいた画像の「真っ白」に変更 */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #131314; 
-            color: #e3e3e3;
+            background: #FFFFFF; /* ✨ 送っていただいた純白の色です */
+            color: #1f1f1f; /* 文字色は見やすい深いグレー */
             margin: 0; 
             padding: 0; 
             display: flex; 
@@ -22,8 +22,8 @@
             padding: 15px 20px;
             font-size: 20px;
             font-weight: 500;
-            color: #e3e3e3;
-            border-bottom: 1px solid #2e2f30;
+            color: #1f1f1f;
+            border-bottom: 1px solid #f0f0f0; /* 薄い境界線 */
         }
 
         /* チャット表示エリア */
@@ -49,16 +49,16 @@
             font-size: 15px;
         }
 
-        /* ユーザーの発言（右側・薄いグレーの枠） */
+        /* ユーザーの発言（右側・白背景に映える薄いグレーの吹き出し） */
         .user { 
-            background: #2e2f30; 
-            color: #fff;
+            background: #f0f4f9; /* Googleっぽい爽やかな薄いブルーグレー */
+            color: #1f1f1f;
             align-self: flex-end; 
             margin-left: auto; 
             border-bottom-right-radius: 4px;
         }
 
-        /* Geminiの発言（左側・枠なしでアイコン付き風） */
+        /* Geminiの発言（左側・枠なし） */
         .ai { 
             background: transparent; 
             align-self: flex-start; 
@@ -66,7 +66,7 @@
             position: relative;
         }
 
-        /* Geminiのキラキラアイコンを疑似的に再現 */
+        /* Geminiのキラキラアイコン */
         .ai::before {
             content: "✨";
             position: absolute;
@@ -84,17 +84,17 @@
             box-sizing: border-box;
         }
 
-        /* 本物風の丸い入力ボックス */
+        /* 本物風の丸い入力ボックス（背景が白なので、少しグレーにして目立たせます） */
         #input-area { 
             display: flex; 
             align-items: center;
-            background: #1e1f20;
+            background: #f0f2f5; /* ソフトな明るいグレー */
             border-radius: 28px;
             padding: 6px 16px;
             border: 1px solid transparent;
         }
         #input-area:focus-within {
-            background: #28292a;
+            background: #eaf0f6; /* クリックした時に少し青みがかった色に */
         }
 
         /* 入力欄本体 */
@@ -102,20 +102,20 @@
             flex: 1; 
             background: transparent;
             border: none;
-            color: #e3e3e3;
+            color: #1f1f1f;
             padding: 12px; 
             font-size: 16px;
             outline: none;
         }
         input::placeholder {
-            color: #80868b;
+            color: #757575;
         }
 
-        /* 送信ボタン（右側のアイコン風） */
+        /* 送信ボタン（Googleブルー） */
         button { 
             background: transparent;
             border: none;
-            color: #a8c7fa;
+            color: #1a73e8; 
             font-size: 20px;
             cursor: pointer; 
             padding: 8px;
@@ -125,8 +125,9 @@
             justify-content: center;
         }
         button:hover {
-            background: #2e2f30;
+            background: #e1e4e8;
         }
+
     </style>
 </head>
 <body>
