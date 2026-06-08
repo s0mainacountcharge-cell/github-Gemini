@@ -146,8 +146,17 @@
     </div>
 
     <script>
-        // ⚠️ ここに取得したGeminiのAPIキーを貼り付けてください
-        const API_KEY = 'ここにあなたのAPIキーを貼り付ける';
+                // 🔒 GitHubに怒られないように、サイトを開いた時に手入力を求めます
+        // 一度入力すれば、ページを閉じるまでブラウザが記憶します
+        let API_KEY = window.sessionStorage.getItem('gemini_key');
+        
+        if (!API_KEY) {
+            API_KEY = prompt("Gemini APIキーを入力してください：");
+            if (API_KEY) {
+                window.sessionStorage.setItem('gemini_key', API_KEY);
+            }
+        }
+        
         const API_URL = `https://googleapis.com{API_KEY}`;
 
         let chatHistory = [];
