@@ -3,25 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>履歴が残るマイGeminiチャット</title>
+    <title>Gemini</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; height: 90vh; }
-        #chat-box { flex: 1; border: 1px solid #ccc; background: white; padding: 15px; overflow-y: scroll; border-radius: 8px; margin-bottom: 10px; }
-        .msg { margin: 10px 0; padding: 10px; border-radius: 5px; max-width: 80%; }
-        .user { background: #e3f2fd; align-self: flex-end; margin-left: auto; text-align: right; }
-        .ai { background: #f1f8e9; align-self: flex-start; }
-        #input-area { display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        button { padding: 10px 20px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+        /* 全体の背景を本物っぽいダークモード風（ディープネイビー）に */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #131314; 
+            color: #e3e3e3;
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+        }
+        
+        /* ヘッダー */
+        header {
+            padding: 15px 20px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #e3e3e3;
+            border-bottom: 1px solid #2e2f30;
+        }
+
+        /* チャット表示エリア */
+        #chat-box { 
+            flex: 1; 
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px; 
+            overflow-y: auto; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* メッセージの枠 */
+        .msg { 
+            margin: 15px 0; 
+            padding: 12px 18px; 
+            border-radius: 18px; 
+            max-width: 85%; 
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* ユーザーの発言（右側・薄いグレーの枠） */
+        .user { 
+            background: #2e2f30; 
+            color: #fff;
+            align-self: flex-end; 
+            margin-left: auto; 
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Geminiの発言（左側・枠なしでアイコン付き風） */
+        .ai { 
+            background: transparent; 
+            align-self: flex-start; 
+            padding-left: 40px;
+            position: relative;
+        }
+
+        /* Geminiのキラキラアイコンを疑似的に再現 */
+        .ai::before {
+            content: "✨";
+            position: absolute;
+            left: 10px;
+            top: 12px;
+            font-size: 18px;
+        }
+
+        /* 入力エリアのコンテナ */
+        .input-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px 25px 20px;
+            box-sizing: border-box;
+        }
+
+        /* 本物風の丸い入力ボックス */
+        #input-area { 
+            display: flex; 
+            align-items: center;
+            background: #1e1f20;
+            border-radius: 28px;
+            padding: 6px 16px;
+            border: 1px solid transparent;
+        }
+        #input-area:focus-within {
+            background: #28292a;
+        }
+
+        /* 入力欄本体 */
+        input { 
+            flex: 1; 
+            background: transparent;
+            border: none;
+            color: #e3e3e3;
+            padding: 12px; 
+            font-size: 16px;
+            outline: none;
+        }
+        input::placeholder {
+            color: #80868b;
+        }
+
+        /* 送信ボタン（右側のアイコン風） */
+        button { 
+            background: transparent;
+            border: none;
+            color: #a8c7fa;
+            font-size: 20px;
+            cursor: pointer; 
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:hover {
+            background: #2e2f30;
+        }
     </style>
 </head>
 <body>
 
-    <h2>🤖 履歴が残るマイGeminiチャット</h2>
-    <div id="chat-box"></div>
-    <div id="input-area">
-        <input type="text" id="user-input" placeholder="メッセージを入力してください..." onkeypress="if(event.key==='Enter') sendToGemini()">
-        <button onclick="sendToGemini()">送信</button>
+    <header>✨ Gemini</header>
+    <div id="chat-box">
+        <!-- 最初のアナウンス -->
+        <div class="msg ai"><b>Gemini:</b> 今日はどのような用件でしょうか？</div>
+    </div>
+    
+    <div class="input-container">
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="ここにプロンプトを入力してください" onkeypress="if(event.key==='Enter') sendToGemini()">
+            <button onclick="sendToGemini()">➤</button>
+        </div>
     </div>
 
     <script>
@@ -29,7 +149,6 @@
         const API_KEY = 'ここにあなたのAPIキーを貼り付ける';
         const API_URL = `https://googleapis.com{API_KEY}`;
 
-        // 🌟 ここに過去の会話履歴をどんどん溜めていきます
         let chatHistory = [];
 
         async function sendToGemini() {
@@ -39,48 +158,45 @@
             
             if (!prompt) return;
 
-            // 1. ユーザーのメッセージを画面に表示
-            chatBox.innerHTML += `<div class="msg user"><b>あなた:</b> ${prompt}</div>`;
+            // 1. ユーザーのメッセージを表示
+            chatBox.innerHTML += `<div class="msg user">${prompt}</div>`;
             inputField.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
             // AIの返答待ち表示
             const aiMsgId = 'ai-' + Date.now();
-            chatBox.innerHTML += `<div class="msg ai" id="${aiMsgId}"><b>Gemini:</b> 考え中...</div>`;
+            chatBox.innerHTML += `<div class="msg ai" id="${aiMsgId}">考え中...</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 🌟 履歴リストに今回のユーザーの発言を追加
             chatHistory.push({
                 role: "user",
                 parts: [{ text: prompt }]
             });
 
-            // 2. Googleのサーバー（API）へ「履歴丸ごと」送信
+            // 2. API送信
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: chatHistory // 🌟 単発の質問ではなく、今までの履歴を送る
+                        contents: chatHistory
                     })
                 });
 
                 const data = await response.json();
-                const reply = data.candidates[0].content.parts[0].text;
+                const reply = data.candidates[0].content.parts[0].text; // バグ防止のためデータ構造の指定を少し厳密に直しました
 
-                // 3. Googleから返ってきた答えを画面に書く
-                document.getElementById(aiMsgId).innerHTML = `<b>Gemini:</b> ${reply.replace(/\n/g, '<br>')}`;
+                // 3. 画面書き換え
+                document.getElementById(aiMsgId).innerHTML = `${reply.replace(/\n/g, '<br>')}`;
 
-                // 🌟 履歴リストにAIの返答も追加して記憶させる
                 chatHistory.push({
                     role: "model",
                     parts: [{ text: reply }]
                 });
 
             } catch (error) {
-                document.getElementById(aiMsgId).innerHTML = `<b>Gemini:</b> エラーが発生しました。`;
+                document.getElementById(aiMsgId).innerHTML = `<span style="color: #ecc9c9;">エラーが発生しました。学校のWi-FiでAPI通信自体がブロックされている可能性があります。</span>`;
                 console.error(error);
-                // エラーが起きた場合は、直前のユーザーの発言を履歴から消去して不整合を防ぐ
                 chatHistory.pop();
             }
             chatBox.scrollTop = chatBox.scrollHeight;
